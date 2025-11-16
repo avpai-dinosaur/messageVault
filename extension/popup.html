@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body { font-family: sans-serif; padding: 10px; }
+      button { padding: 8px 12px; font-size: 14px; }
+      button:disabled {
+        background-color: #ccc;
+        color: #666;
+        cursor: not-allowed;
+      }
+      #status { margin-top: 10px; font-weight: bold; }
+      #status.saved { color: green; }
+      #status.exists { color: orange; }
+      #status.error { color: red; }
+    </style>
+  </head>
+  <body>
+    <button id="grabBtn">Grab Message</button>
+    <div id="status"></div>
+    <script src="popup.js"></script>
+  </body>
+</html>

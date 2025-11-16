@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "MessageVault JPay Grabber",
+  "version": "1.0",
+  "description": "Grab messages from JPay and send to MessageVault",
+  "permissions": ["activeTab", "scripting", "storage", "tabs", "nativeMessaging"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y"
+      },
+      "description": "Grab JPay message"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.jpay.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "messageVault@avpai-dinosaur.github.io",
+      "strict_min_version": "91.0"
+    }
+  }
+}
