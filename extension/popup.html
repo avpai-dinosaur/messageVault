@@ -2,22 +2,63 @@
 <html>
   <head>
     <style>
-      body { font-family: sans-serif; padding: 10px; }
-      button { padding: 8px 12px; font-size: 14px; }
+      body { 
+        font-family: sans-serif; 
+        padding: 12px; 
+        margin: 0; 
+      }
+      .container { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        gap: 10px; 
+        width: 320px; 
+      }
+
+      button { padding: 8px 12px; font-size: 20px; }
       button:disabled {
-        background-color: #ccc;
-        color: #666;
+        background-color: #eee;
+        color: #999;
         cursor: not-allowed;
       }
-      #status { margin-top: 10px; font-weight: bold; }
-      #status.saved { color: green; }
-      #status.exists { color: orange; }
-      #status.error { color: red; }
+
+      /* Status box: reserve space so popup doesn't jump */
+      #status {
+        min-height: 2.6em; /* reserve area for up to two lines */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 100%;
+        text-align: center;
+      }
+
+      #status .label { font-weight: 700; text-transform: uppercase; font-size: 18px; }
+      #status .details {
+        font-size: 15px;
+        color: #333;
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      #status.saved .label { color: #137333; }    /* green */
+      #status.exists .label { color: #b45309; }   /* orange */
+      #status.error .label { color: #b91c1c; }    /* red */
+
+      /* small visual hint for when nothing is shown */
+      #status.empty .label { font-weight: 500; color: #666; text-transform: none; }
     </style>
   </head>
   <body>
-    <button id="grabBtn">Grab Message</button>
-    <div id="status"></div>
+    <div class="container">
+      <button id="grabBtn">Grab Message</button>
+      <div id="status" class="empty" aria-live="polite">
+        <span id="statusLabel" class="label">No action yet</span>
+        <span id="statusDetails" class="details"></span>
+      </div>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>
