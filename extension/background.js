@@ -13,23 +13,21 @@ chrome.runtime.onConnect.addListener((p) => {
 const port = chrome.runtime.connectNative("com.ashvinpai.messagevault");
 port.onMessage.addListener((msg) => {
     console.debug("Received from native host:", msg);
-    if (popupPort) {
-        popupPort.postMessage(msg);
-    }
+    popupPort?.postMessage(msg);
 });
 port.onDisconnect.addListener(() => {
     console.error("Disconnected from native host");
+    popupPort?.postMessage({ status: "error", error: "Disconnected from native host" });
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'GRABBED_MESSAGE') {
         console.debug("Received message:", msg);
-        if (port) {
-            try {
-                port.postMessage(msg);
-            } catch (e) {
-                console.error("Error sending message to native host:", e);
-            }
+        try {
+            port.postMessage(msg);
+        } catch (e) {
+            console.error("Error sending message to native host:", e);
+            popupPort?.postMessage({ status: "error", error: e.message || String(e) });
         }
         sendResponse({ status: "received by background.js"});
     }
