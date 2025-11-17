@@ -3,11 +3,14 @@ import struct
 import json
 import logging
 import os
+import hashlib
 from datetime import datetime
 from pathlib import Path
 
 
 CHROME_NM_MESSAGE_LENGTH_BYTES = 4
+DOCUMENTS_DIR = Path.home() / "Documents" / "MessageVault"
+DOCUMENTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def log_message(message):
@@ -15,15 +18,16 @@ def log_message(message):
     timestamp = message["timestamp"]
     messageType = message["messageType"]
     prisonerName = message["prisonerName"]
-    filename_safe_prisonerName = "".join(c for c in prisonerName if c.isalnum()).strip()
 
     utc_datetime = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
     year = str(utc_datetime.year)
     month = str(utc_datetime.month).zfill(2)
 
-    output_folder = Path(filename_safe_prisonerName) / messageType / year / month
+    filename_safe_prisonerName = "".join(c for c in prisonerName if c.isalnum()).strip()
+    hash_suffix = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    output_folder = DOCUMENTS_DIR / filename_safe_prisonerName / messageType / year / month
     output_folder.mkdir(parents=True, exist_ok=True)
-    filename = utc_datetime.strftime("%Y-%m-%d_%H-%M-%S") + ".txt"
+    filename = utc_datetime.strftime("%Y-%m-%d_%H-%M-%S") + f"_{hash_suffix}.txt"
     file_path = output_folder / filename
 
     status = ""
@@ -83,7 +87,7 @@ if __name__ == "__main__":
     # Logging (NEVER to stdout!)
     # --------------------------
     logging.basicConfig(
-        filename="debug.log",
+        filename=DOCUMENTS_DIR / "native_host.log",
         filemode="a",
         level=logging.DEBUG,
         format="%(asctime)s %(levelname)s %(message)s"

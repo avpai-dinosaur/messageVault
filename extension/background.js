@@ -10,7 +10,7 @@ chrome.runtime.onConnect.addListener((p) => {
     }
 });
 
-const port = chrome.runtime.connectNative("message_vault_host");
+const port = chrome.runtime.connectNative("com.ashvinpai.messagevault");
 port.onMessage.addListener((msg) => {
     console.debug("Received from native host:", msg);
     if (popupPort) {
