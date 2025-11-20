@@ -6,25 +6,14 @@ Since JPay does not offer message export or bulk download tools, MessageVault pr
 
 ---
 
-## ⭐ Features
+## Features
 
 - **Automatic message extraction** directly from JPay’s web interface  
 - **Local-only storage** — no cloud services, no third parties  
 - **Native Windows integration** via Chrome Native Messaging  
 - **Optional installer** that sets everything up for you  
 
----
-
-## 🚀 Installation
-
-You can install MessageVault in one of two ways:
-
-1. **Manual Setup** – Install the Chrome extension and native host yourself  
-2. **Automatic Installer** – Use the provided Inno Setup installer *(recommended)*
-
----
-
-# 1. 🔧 Manual Setup
+# Setup
 
 ## Chrome Extension
 
@@ -33,8 +22,6 @@ You can install MessageVault in one of two ways:
 3. Click **Load unpacked**  
 4. Select the `messageVault/extension` folder  
 5. **Save the extension ID** — you’ll need it when configuring the native host
-
----
 
 ## Windows Native Messaging Host
 
@@ -46,9 +33,21 @@ messageVault\nativeHost> pyinstaller --onefile main.py --distpath [Destination F
 
 ### 1. Configure the Host Manifest
 
-Edit `com.ashvinpai.messagevault.json` so the allowed_origins field includes the Chrome extension ID you recorded earlier.
+Edit `com.ashvinpai.messagevault.json` so the **allowed_origins** field includes the Chrome extension ID you recorded earlier.
 
-Place the manifest in the same directory as MessageVault.exe.
+Also edit the **path** field to point to your generated executable.
+
+```
+{
+    "name": "com.ashvinpai.messagevault",
+    "description": "Host for MessageVault Windows native messaging",
+    "path": "C:\\path\\to\\MessageVault.exe",
+    "type": "stdio",
+    "allowed_origins": [
+        "chrome-extension://<your-extension-id>/"
+    ]
+}
+```
 
 ### 2. Register the Native Host (User-Level)
 
@@ -65,9 +64,9 @@ Double-click the file to add the registry entry, then confirm it via Registry Ed
 For more details, see Chrome’s official documentation:
 https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging
 
-# 2. 📦 Automatic Installer (Recommended)
+# Installer 
 
-MessageVault includes an optional Inno Setup script that automates:
+MessageVault includes an Inno Setup script that automates:
 
 - Installing the native host to `C:\Program Files\`
 - Registering the host under **HKEY_LOCAL_MACHINE** (system-wide)
@@ -90,9 +89,9 @@ The installer will be created at:
 ..\Output\MessageVaultInstaller.exe
 ```
 
-Run the installer and MessageVault will be fully configured.
+Run the installer and the MessageVault native host will be fully configured.
 
 # Notes
 - Manual setup installs the host **per user**
 - The installer sets it up **system-wide**
-- MessageVault stores all data **locally** in the users `C:\Users\<user>\Documents\MessageVault\`
+- MessageVault stores all data **locally** in `C:\Users\<user>\Documents\MessageVault\`
