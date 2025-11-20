@@ -1,5 +1,98 @@
 # MessageVault – JPay Message Backup Tool
 
-MessageVault is a Chrome extension + Native Messaging Host that automatically extracts, converts, and securely stores JPay messages directly onto your local machine. 
+**MessageVault** is a Chrome extension plus a Windows Native Messaging Host that automatically extracts, converts, and securely stores **JPay messages** on your local machine.
 
-JPay provides no native export or bulk-download functionality. MessageVault fills that gap by giving prisoners and their loved ones a safe, private, local way to preserve their communication history.
+Since JPay does not offer message export or bulk download tools, MessageVault provides a **private, secure, and self-hosted** way for people to preserve communication history with incarcerated loved ones.
+
+---
+
+## ⭐ Features
+
+- **Automatic message extraction** directly from JPay’s web interface  
+- **Local-only storage** — no cloud services, no third parties  
+- **Native Windows integration** via Chrome Native Messaging  
+- **Optional installer** that sets everything up for you  
+
+---
+
+## 🚀 Installation
+
+You can install MessageVault in one of two ways:
+
+1. **Manual Setup** – Install the Chrome extension and native host yourself  
+2. **Automatic Installer** – Use the provided Inno Setup installer *(recommended)*
+
+---
+
+# 1. 🔧 Manual Setup
+
+## Chrome Extension
+
+1. Open `chrome://extensions`  
+2. Enable **Developer mode**  
+3. Click **Load unpacked**  
+4. Select the `messageVault/extension` folder  
+5. **Save the extension ID** — you’ll need it when configuring the native host
+
+---
+
+## Windows Native Messaging Host
+
+The native host is built using **PyInstaller**:
+
+```bash
+messageVault\nativeHost> pyinstaller --onefile main.py --distpath [Destination Folder] --name MessageVault
+```
+
+### 1. Configure the Host Manifest
+
+Edit `com.ashvinpai.messagevault.json` so the allowed_origins field includes the Chrome extension ID you recorded earlier.
+
+Place the manifest in the same directory as MessageVault.exe.
+
+### 2. Register the Native Host (User-Level)
+
+Create a `.reg` file containing:
+
+```reg
+Windows Registry Editor Version 5.00
+[HKEY_CURRENT_USER\Software\Google\Chrome\NativeMessagingHosts\com.ashvinpai.messagevault]
+@="C:\\path\\to\\com.ashvinpai.messagevault.json"
+```
+
+Double-click the file to add the registry entry, then confirm it via Registry Editor.
+
+For more details, see Chrome’s official documentation:
+https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging
+
+# 2. 📦 Automatic Installer (Recommended)
+
+MessageVault includes an optional Inno Setup script that automates:
+
+- Installing the native host to `C:\Program Files\`
+- Registering the host under **HKEY_LOCAL_MACHINE** (system-wide)
+- Copying all required binaries and manifest files
+
+## Steps to Generate the Installer
+
+1. Download and install Inno Setup:
+https://jrsoftware.org/isinfo.php
+2. Place the following files in the same directory:
+    - `MessageVault.exe`
+    - `com.ashvinpai.messagevault.json`
+    - `MessageVaultSetup.iss`
+3. Open `MessageVaultSetup.iss` in the Inno Setup editor.
+4. Click **Build → Compile**.
+
+The installer will be created at:
+
+```
+..\Output\MessageVaultInstaller.exe
+```
+
+Run the installer and MessageVault will be fully configured.
+
+# Notes
+- Manual setup installs the host **per user**
+- The installer sets it up **system-wide**
+- MessageVault stores all data **locally** in the users `C:\Users\<user>\Documents\MessageVault\`
