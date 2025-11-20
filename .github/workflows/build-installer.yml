@@ -24,9 +24,9 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      # 4. Build native-host EXE in messageVault/nativeHost
+      # 4. Build native-host EXE in nativeHost
       - name: Build Native Host Executable
-        working-directory: messageVault/nativeHost
+        working-directory: nativeHost
         run: |
           pyinstaller --onefile main.py --name MessageVault --distpath .
 
@@ -36,7 +36,7 @@ jobs:
 
       # 6. Compile the installer using MessageVaultSetup.iss
       - name: Build Inno Setup Installer
-        working-directory: messageVault/nativeHost
+        working-directory: nativeHost
         run: |
           iscc.exe MessageVaultSetup.iss
 
@@ -45,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MessageVaultInstaller
-          path: messageVault/nativeHost/Output/MessageVaultInstaller.exe
+          path: nativeHost\Output\MessageVaultInstaller.exe
