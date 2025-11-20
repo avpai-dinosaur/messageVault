@@ -1,17 +1,17 @@
 # MessageVault – JPay Message Backup Tool
 
-**MessageVault** is a Chrome extension plus a Windows Native Messaging Host that automatically extracts, converts, and securely stores **JPay messages** on your local machine.
+**MessageVault** is a Chrome extension plus a Windows Native Messaging Host that automatically extracts and stores **JPay messages** on your local machine.
 
-Since JPay does not offer message export or bulk download tools, MessageVault provides a **private, secure, and self-hosted** way for people to preserve communication history with incarcerated loved ones.
+Since JPay does not offer message export or bulk download tools, MessageVault provides a **private** and **local** way for people to preserve communication history with incarcerated loved ones.
 
 ---
 
 ## Features
 
-- **Automatic message extraction** directly from JPay’s web interface  
+- **One-click message extraction** directly from JPay’s web interface  
 - **Local-only storage** — no cloud services, no third parties  
 - **Native Windows integration** via Chrome Native Messaging  
-- **Optional installer** that sets everything up for you  
+- **Native Messaging Host Installer** that sets everything up for you  
 
 # Setup
 
