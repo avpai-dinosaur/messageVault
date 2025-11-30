@@ -22,7 +22,7 @@ jobs:
 
       # 3. Install PyInstaller
       - name: Install PyInstaller
-        run: pip install pyinstaller
+        run: pip install -r gui/requirements.txt pyinstaller
 
       # 4a. Build native-host EXE in nativeHost
       - name: Build Native Host Executable
