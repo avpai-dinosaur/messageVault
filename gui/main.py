@@ -20,6 +20,32 @@ class Message:
         self.content = content
 
 
+class MyDateEntry(DateEntry):
+    """Subclass of DateEntry to enforce date format."""
+
+    def _on_focus_out_cal(self, event):
+        """Better focus-out handler: keep calendar open during internal navigation,
+        but close when clicking outside the calendar entirely."""
+        
+        mouse_x, mouse_y = self._top_cal.winfo_pointerxy()
+
+        x0 = self._top_cal.winfo_rootx()
+        y0 = self._top_cal.winfo_rooty()
+        x1 = x0 + self._top_cal.winfo_width()
+        y1 = y0 + self._top_cal.winfo_height()
+
+        inside = (x0 <= mouse_x <= x1) and (y0 <= mouse_y <= y1)
+
+        if inside:
+            try:
+                self._calendar.focus_force()
+            except Exception:
+                pass
+        else:
+            self._top_cal.withdraw()
+            self.state(['!pressed', '!active'])
+
+
 def parse_datetime_from_filename(filename: str) -> datetime | None:
     """Parses the UTC datetime from a given filename and returns a datetime object in the user's local timezone.
 
@@ -114,23 +140,37 @@ def on_search_button_click(messages: list[Message], table: ttk.Treeview, start_d
     update_table(filtered, table)
 
 
-# def show_message(event):
-#     """Show full message content when a row is clicked."""
-#     selected = table.selection()
-#     if selected:
-#         idx = int(selected[0])
-#         msg = filtered_messages()[idx]
-#         messagebox.showinfo(title=msg['topic'], message=f"Date: {msg['date']}\n\n{msg['content']}")
+def on_row_click(
+        event,
+        messages: list[Message],
+        table: ttk.Treeview,
+        start_date: DateEntry,
+        end_date: DateEntry,
+        search_var: tk.StringVar,
+        viewer: tk.Text
+    ):
+    """Show full message content when a row is clicked."""
+    selected = table.selection()
+    if not selected:
+        return
 
-# def filtered_messages():
-#     """Return currently filtered messages (used for click lookup)."""
-#     start = start_date.get_date()
-#     end = end_date.get_date()
-#     keyword = search_var.get().lower()
+    idx = int(selected[0])
+    filtered = filter_messages(messages, start_date, end_date, search_var)
+    if idx >= len(filtered):
+        return
 
-#     return [m for m in messages if start <= datetime.strptime(m['date'], "%Y-%m-%d").date() <= end
-#             and keyword in m['topic'].lower()]
+    msg = filtered[idx]
 
+    viewer.config(state='normal')
+    viewer.delete("1.0", tk.END)
+    viewer.insert(
+        tk.END,
+        f"Prisoner: {msg.prisoner}\n"
+        f"Type: {msg.message_type}\n"
+        f"Date: {msg.datetime}\n\n"
+        f"{msg.content}"
+    )
+    viewer.configure(state='disabled')
 
 if __name__ == "__main__":
     messages = load_messages()
@@ -144,12 +184,16 @@ if __name__ == "__main__":
     filter_frame.pack(padx=10, pady=10, fill='x')
 
     ttk.Label(filter_frame, text="Start Date:").pack(side='left')
-    start_date = DateEntry(filter_frame, width=12)
+    start_date = MyDateEntry(filter_frame, width=12, state='normal', date_pattern='yyy-MM-dd')
     start_date.pack(side='left', padx=5)
+    start_date.set_date(messages[-1].datetime.date() if messages else datetime.now().date())
+    # ttk.Entry.configure(start_date, state='readonly')
 
     ttk.Label(filter_frame, text="End Date:").pack(side='left')
-    end_date = DateEntry(filter_frame, width=12)
+    end_date = MyDateEntry(filter_frame, width=12, state='normal', date_pattern='yyy-MM-dd')
     end_date.pack(side='left', padx=5)
+    end_date.set_date(datetime.now().date())
+    # ttk.Entry.configure(end_date, state='readonly')
 
     ttk.Label(filter_frame, text="Topic:").pack(side='left', padx=(10,0))
     search_var = tk.StringVar()
@@ -159,9 +203,13 @@ if __name__ == "__main__":
     search_button = ttk.Button(filter_frame, text="Filter", command=lambda: on_search_button_click(messages, table, start_date, end_date, search_var))
     search_button.pack(side='left', padx=5)
 
+    # Split main window into two sections
+    paned = ttk.PanedWindow(root, orient='vertical')
+    paned.pack(fill='both', expand=True)
+
     # Table frame
-    table_frame = ttk.Frame(root)
-    table_frame.pack(padx=10, pady=(0,10), fill='both', expand=True)
+    table_frame = ttk.Frame(paned)
+    paned.add(table_frame, weight=1)
 
     columns = ("Date", "Topic", "Snippet")
     table = ttk.Treeview(table_frame, columns=columns, show='headings')
@@ -169,15 +217,33 @@ if __name__ == "__main__":
         table.heading(col, text=col)
         table.column(col, anchor='w')
 
-    table.pack(side='left', fill='both', expand=True)
+    # Scrollbar for treeview
+    table_scroll = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
+    table.configure(yscrollcommand=table_scroll.set)
+    table_scroll.pack(side='right', fill='y')
 
-    # Scrollbar
-    scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
-    table.configure(yscrollcommand=scrollbar.set)
-    scrollbar.pack(side='right', fill='y')
+    table.pack(side="left", fill="both", expand=True)
+    table_scroll.pack(side="right", fill="y")
+
+    table_frame.rowconfigure(0, weight=1)
+    table_frame.columnconfigure(0, weight=1)
+
+    # Full message viewer
+    viewer_frame = ttk.Frame(paned)
+    paned.add(viewer_frame, weight=1)
+
+    message_view = tk.Text(viewer_frame, wrap="word")
+    viewer_scroll = ttk.Scrollbar(viewer_frame, orient="vertical", command=message_view.yview)
+    message_view.configure(yscrollcommand=viewer_scroll.set)
+
+    message_view.grid(row=0, column=0, sticky="nsew")
+    viewer_scroll.grid(row=0, column=1, sticky="ns")
+
+    viewer_frame.rowconfigure(0, weight=1)
+    viewer_frame.columnconfigure(0, weight=1)
 
     # Bind row click
-    # table.bind("<Double-1>", show_message)
+    table.bind("<Double-1>", lambda event: on_row_click(event, messages, table, start_date, end_date, search_var, message_view))
 
     # Populate initial table
     update_table(messages, table)
