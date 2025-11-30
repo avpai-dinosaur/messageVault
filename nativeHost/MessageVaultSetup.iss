@@ -5,8 +5,7 @@
 #define AppName "MessageVault"
 #define AppPublisher "Ashvin Pai"
 #define AppVersion "1.0.0"
-#define AppExeName "MessageVault.exe"
-#define GuiExeName "MessageVaultGUI.exe"
+#define GuiExeName "MessageVault.exe"
 #define HostName "com.ashvinpai.messagevault"
 
 [Setup]
@@ -23,8 +22,8 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=admin
 
 [Files]
-; Native host executable → Program Files\MessageVault\MessageVault.exe
-Source: "MessageVault.exe"; \
+; Native host executable → Program Files\MessageVault\MVNativeHost.exe
+Source: "MVNativeHost.exe"; \
     DestDir: "{app}"; \
     Flags: ignoreversion
 
@@ -33,8 +32,8 @@ Source: "com.ashvinpai.messagevault.json"; \
     DestDir: "{app}"; \
     Flags: ignoreversion
 
-; GUI application -> Program Files\MessageVault\MessageVaultGUI.exe
-Source: "MessageVaultGUI.exe"; \
+; GUI application -> Program Files\MessageVault\MessageVault.exe
+Source: "MessageVault.exe"; \
     DestDir: "{app}"; \
     Flags: ignoreversion
 
@@ -47,7 +46,6 @@ Root: HKLM; \
     Flags: uninsdeletekey
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{group}\{#AppName}"; Filename: "{app}\{#GuiExeName}"
 
 [Run]
