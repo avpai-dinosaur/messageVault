@@ -35,7 +35,7 @@ Source: "com.ashvinpai.messagevault.json"; \
 
 ; GUI application -> Program Files\MessageVault\MessageVaultGUI.exe
 Source: "MessageVaultGUI.exe"; \
-    DestDir: "{app}" \
+    DestDir: "{app}"; \
     Flags: ignoreversion
 
 [Registry]
