@@ -28,13 +28,13 @@ jobs:
       - name: Build Native Host Executable
         working-directory: nativeHost
         run: |
-          pyinstaller --onefile main.py --name MessageVault --distpath .
+          pyinstaller --onefile main.py --name MVNativeHost --distpath .
 
-      # 4b. Build native-host EXE in nativeHost
+      # 4b. Build GUI EXE in nativeHost so that both EXEs are in the same folder
       - name: Build GUI Executable
         working-directory: gui
         run: |
-          pyinstaller --onefile main.py --name MessageVaultGUI --distpath ../nativeHost
+          pyinstaller --onefile main.py --name MessageVault --distpath ../nativeHost
 
       # 5. Install Inno Setup (ISCC)
       - name: Install Inno Setup

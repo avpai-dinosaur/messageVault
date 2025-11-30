@@ -173,7 +173,7 @@ if __name__ == "__main__":
 
     # Scrollbar
     scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
-    # table.configure(yscroll=scrollbar.set)
+    table.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side='right', fill='y')
 
     # Bind row click
