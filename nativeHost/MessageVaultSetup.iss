@@ -56,3 +56,26 @@ Name: "{group}\{#AppName}"; Filename: "{app}\{#GuiExeName}"
 
 [UninstallDelete]
 ; Manifest should clean up itself
+
+[Code]
+function InitializeUninstall(): Boolean;
+var
+  ResultCode: Integer;
+begin
+  ResultCode := MsgBox(
+    'Before uninstalling MessageVault, please make sure the Chrome extension is disabled.' + #13#10 +
+    'Uninstalling while the extension is enabled may cause issues.' + #13#10#13#10 +
+    'Do you want to continue with the uninstall?',
+    mbConfirmation,
+    MB_YESNO
+  );
+
+  if ResultCode = IDNO then
+  begin
+    Result := False;
+  end
+  else
+  begin
+    Result := True;
+  end;
+end;
