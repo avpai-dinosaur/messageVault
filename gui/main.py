@@ -1,4 +1,5 @@
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import ttk, messagebox
 from tkcalendar import DateEntry
 from datetime import datetime, timezone
@@ -119,7 +120,8 @@ def filter_messages(messages: list[Message], start_date: DateEntry, end_date: Da
     filtered = []
     for m in messages:
         if start <= m.datetime.date() <= end:
-            filtered.append(m)
+            if not keyword or keyword in m.content.lower():
+                filtered.append(m)
 
     return filtered
 
@@ -234,7 +236,7 @@ if __name__ == "__main__":
 
     message_view = tk.Text(viewer_frame, wrap="word")
     viewer_scroll = ttk.Scrollbar(viewer_frame, orient="vertical", command=message_view.yview)
-    message_view.configure(yscrollcommand=viewer_scroll.set)
+    message_view.configure(yscrollcommand=viewer_scroll.set, font=tkfont.Font(family="Arial", size=12))
 
     message_view.grid(row=0, column=0, sticky="nsew")
     viewer_scroll.grid(row=0, column=1, sticky="ns")
