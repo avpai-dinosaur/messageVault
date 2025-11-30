@@ -1,0 +1,185 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+from tkcalendar import DateEntry
+from datetime import datetime, timezone
+from pathlib import Path
+import re
+
+
+DATE_ENTRY_DATE_FORMAT = "%Y-%m-%d"
+
+
+class Message:
+    """Class representing a message."""
+
+    def __init__(self, prisoner: str, message_type: str, datetime: datetime, content: str):
+        """Constructor."""
+        self.prisoner = prisoner
+        self.message_type = message_type
+        self.datetime = datetime
+        self.content = content
+
+
+def parse_datetime_from_filename(filename: str) -> datetime | None:
+    """Parses the UTC datetime from a given filename and returns a datetime object in the user's local timezone.
+
+    The expected file format is YYYY-MM-DD_HH-MM-SS_<hash>.txt. 
+    
+    Returns:
+        A datetime object in the user's local timezone or None if parsing fails.
+    """
+    match = re.match(r"(\d{4})-(\d{2})-(\d{2})_(\d{2})-(\d{2})-(\d{2})", filename)
+    if match is None:
+        return None
+    year, month, day, hour, minute, second = map(int, match.groups())
+    utc_dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second), tzinfo=timezone.utc)
+    local_dt = utc_dt.astimezone() 
+    return local_dt
+
+
+def load_messages() -> list[Message]:
+    """Scans the MessageVault directory and returns a list of Message objects.
+
+    Directory format:
+    /Users/<user>/Documents/MessageVault/<prisoner>/<sent|received>/<year>/<month>/<file>.txt
+    """
+    messages = []
+    documents_dir = Path.home() / "Documents" / "MessageVault"
+
+    for prisoner_dir in documents_dir.iterdir():
+        if not prisoner_dir.is_dir():
+            continue
+        for message_type_dir in prisoner_dir.iterdir():
+            if message_type_dir.name not in ("sent", "received"):
+                continue
+            for year_dir in message_type_dir.iterdir():
+                if not year_dir.name.isdigit():
+                    continue
+                for month_dir in year_dir.iterdir():
+                    if not month_dir.name.isdigit():
+                        continue
+                    for message_file in month_dir.iterdir():
+                        if message_file.suffix != ".txt":
+                            continue
+                        try:
+                            message_datetime = parse_datetime_from_filename(message_file.stem)
+                            if message_datetime is None:
+                                raise ValueError(f"Invalid filename format: {message_file.name}")
+                            with open(message_file, "r", encoding="utf-8") as f:
+                                content = f.read()
+                            messages.append(
+                                Message(
+                                    prisoner=prisoner_dir.name,
+                                    message_type=message_type_dir.name,
+                                    datetime=message_datetime,
+                                    content=content
+                                )
+                            )
+                        except Exception as e:
+                            print(f"Error reading {message_file}: {e}")
+    return messages
+
+
+def filter_messages(messages: list[Message], start_date: DateEntry, end_date: DateEntry, search_var: tk.StringVar):
+    """Filter messages based on date range and topic keyword.
+    
+    Returns:
+        A list of Message objects that match the filters. 
+    """
+    start = start_date.get_date()
+    end = end_date.get_date()
+    keyword = search_var.get().lower()
+
+    filtered = []
+    for m in messages:
+        if start <= m.datetime.date() <= end:
+            filtered.append(m)
+
+    return filtered
+
+
+def update_table(messages: list[Message], table: ttk.Treeview):
+    """Update the Treeview table with a list of messages to be displayed."""
+    for row in table.get_children():
+        table.delete(row)
+
+    for idx, message in enumerate(messages):
+        snippet = message.content[:50] + ("..." if len(message.content) > 50 else "")
+        table.insert("", "end", iid=idx, values=(message.datetime.strftime(DATE_ENTRY_DATE_FORMAT), "", snippet))
+
+
+def on_search_button_click(messages: list[Message], table: ttk.Treeview, start_date: DateEntry, end_date: DateEntry, search_var: tk.StringVar):
+    """Handle search button click to filter messages and update the table."""
+    filtered = filter_messages(messages, start_date, end_date, search_var) 
+    update_table(filtered, table)
+
+
+# def show_message(event):
+#     """Show full message content when a row is clicked."""
+#     selected = table.selection()
+#     if selected:
+#         idx = int(selected[0])
+#         msg = filtered_messages()[idx]
+#         messagebox.showinfo(title=msg['topic'], message=f"Date: {msg['date']}\n\n{msg['content']}")
+
+# def filtered_messages():
+#     """Return currently filtered messages (used for click lookup)."""
+#     start = start_date.get_date()
+#     end = end_date.get_date()
+#     keyword = search_var.get().lower()
+
+#     return [m for m in messages if start <= datetime.strptime(m['date'], "%Y-%m-%d").date() <= end
+#             and keyword in m['topic'].lower()]
+
+
+if __name__ == "__main__":
+    messages = load_messages()
+    messages.sort(key=lambda m: m.datetime, reverse=True)
+
+    root = tk.Tk()
+    root.title("MessageVault")
+
+    # Filters frame
+    filter_frame = ttk.Frame(root)
+    filter_frame.pack(padx=10, pady=10, fill='x')
+
+    ttk.Label(filter_frame, text="Start Date:").pack(side='left')
+    start_date = DateEntry(filter_frame, width=12)
+    start_date.pack(side='left', padx=5)
+
+    ttk.Label(filter_frame, text="End Date:").pack(side='left')
+    end_date = DateEntry(filter_frame, width=12)
+    end_date.pack(side='left', padx=5)
+
+    ttk.Label(filter_frame, text="Topic:").pack(side='left', padx=(10,0))
+    search_var = tk.StringVar()
+    search_entry = ttk.Entry(filter_frame, textvariable=search_var, width=20)
+    search_entry.pack(side='left', padx=5)
+
+    search_button = ttk.Button(filter_frame, text="Filter", command=lambda: on_search_button_click(messages, table, start_date, end_date, search_var))
+    search_button.pack(side='left', padx=5)
+
+    # Table frame
+    table_frame = ttk.Frame(root)
+    table_frame.pack(padx=10, pady=(0,10), fill='both', expand=True)
+
+    columns = ("Date", "Topic", "Snippet")
+    table = ttk.Treeview(table_frame, columns=columns, show='headings')
+    for col in columns:
+        table.heading(col, text=col)
+        table.column(col, anchor='w')
+
+    table.pack(side='left', fill='both', expand=True)
+
+    # Scrollbar
+    scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=table.yview)
+    # table.configure(yscroll=scrollbar.set)
+    scrollbar.pack(side='right', fill='y')
+
+    # Bind row click
+    # table.bind("<Double-1>", show_message)
+
+    # Populate initial table
+    update_table(messages, table)
+
+    root.mainloop()
