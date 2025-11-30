@@ -6,6 +6,7 @@
 #define AppPublisher "Ashvin Pai"
 #define AppVersion "1.0.0"
 #define AppExeName "MessageVault.exe"
+#define GuiExeName "MessageVaultGUI.exe"
 #define HostName "com.ashvinpai.messagevault"
 
 [Setup]
@@ -32,6 +33,11 @@ Source: "com.ashvinpai.messagevault.json"; \
     DestDir: "{app}"; \
     Flags: ignoreversion
 
+; GUI application -> Program Files\MessageVault\MessageVaultGUI.exe
+Source: "MessageVaultGUI.exe"; \
+    DestDir: "{app}" \
+    Flags: ignoreversion
+
 [Registry]
 Root: HKLM; \
     Subkey: "Software\Google\Chrome\NativeMessagingHosts\{#HostName}"; \
@@ -42,6 +48,7 @@ Root: HKLM; \
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
+Name: "{group}\{#AppName}"; Filename: "{app}\{#GuiExeName}"
 
 [Run]
 ; Nothing to run automatically after install,

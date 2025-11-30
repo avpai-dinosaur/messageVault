@@ -24,11 +24,17 @@ jobs:
       - name: Install PyInstaller
         run: pip install pyinstaller
 
-      # 4. Build native-host EXE in nativeHost
+      # 4a. Build native-host EXE in nativeHost
       - name: Build Native Host Executable
         working-directory: nativeHost
         run: |
           pyinstaller --onefile main.py --name MessageVault --distpath .
+
+      # 4b. Build native-host EXE in nativeHost
+      - name: Build GUI Executable
+        working-directory: gui
+        run: |
+          pyinstaller --onefile main.py --name MessageVaultGUI --distpath ../nativeHost
 
       # 5. Install Inno Setup (ISCC)
       - name: Install Inno Setup
