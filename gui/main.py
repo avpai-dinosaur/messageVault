@@ -107,7 +107,7 @@ def load_messages() -> list[Message]:
     return messages
 
 
-def filter_messages(messages: list[Message], start_date: DateEntry, end_date: DateEntry, search_var: tk.StringVar):
+def filter_messages(messages: list[Message], start_date: DateEntry, end_date: DateEntry, search_var: tk.StringVar, type_var: tk.StringVar) -> list[Message]:
     """Filter messages based on date range and topic keyword.
     
     Returns:
@@ -116,12 +116,14 @@ def filter_messages(messages: list[Message], start_date: DateEntry, end_date: Da
     start = start_date.get_date()
     end = end_date.get_date()
     keyword = search_var.get().lower()
+    message_type = type_var.get().lower()
 
     filtered = []
     for m in messages:
         if start <= m.datetime.date() <= end:
             if not keyword or keyword in m.content.lower():
-                filtered.append(m)
+                if message_type == "all" or m.message_type == message_type:
+                    filtered.append(m)
 
     return filtered
 
@@ -132,13 +134,20 @@ def update_table(messages: list[Message], table: ttk.Treeview):
         table.delete(row)
 
     for idx, message in enumerate(messages):
-        snippet = message.content[:50] + ("..." if len(message.content) > 50 else "")
-        table.insert("", "end", iid=idx, values=(message.datetime.strftime(DATE_ENTRY_DATE_FORMAT), "", snippet))
+        snippet = message.content[:50].replace("\n", " ") + ("..." if len(message.content) > 50 else "")
+        table.insert("", "end", iid=idx, values=(message.datetime.strftime(DATE_ENTRY_DATE_FORMAT), message.message_type, "", snippet))
 
 
-def on_search_button_click(messages: list[Message], table: ttk.Treeview, start_date: DateEntry, end_date: DateEntry, search_var: tk.StringVar):
+def on_search_button_click(
+        messages: list[Message],
+        table: ttk.Treeview,
+        start_date: DateEntry,
+        end_date: DateEntry,
+        search_var: tk.StringVar,
+        type_var: tk.StringVar
+    ):
     """Handle search button click to filter messages and update the table."""
-    filtered = filter_messages(messages, start_date, end_date, search_var) 
+    filtered = filter_messages(messages, start_date, end_date, search_var, type_var) 
     update_table(filtered, table)
 
 
@@ -149,6 +158,7 @@ def on_row_click(
         start_date: DateEntry,
         end_date: DateEntry,
         search_var: tk.StringVar,
+        type_var: tk.StringVar,
         viewer: tk.Text
     ):
     """Show full message content when a row is clicked."""
@@ -157,7 +167,7 @@ def on_row_click(
         return
 
     idx = int(selected[0])
-    filtered = filter_messages(messages, start_date, end_date, search_var)
+    filtered = filter_messages(messages, start_date, end_date, search_var, type_var)
     if idx >= len(filtered):
         return
 
@@ -189,20 +199,24 @@ if __name__ == "__main__":
     start_date = MyDateEntry(filter_frame, width=12, state='normal', date_pattern='yyy-MM-dd')
     start_date.pack(side='left', padx=5)
     start_date.set_date(messages[-1].datetime.date() if messages else datetime.now().date())
-    # ttk.Entry.configure(start_date, state='readonly')
 
     ttk.Label(filter_frame, text="End Date:").pack(side='left')
     end_date = MyDateEntry(filter_frame, width=12, state='normal', date_pattern='yyy-MM-dd')
     end_date.pack(side='left', padx=5)
     end_date.set_date(datetime.now().date())
-    # ttk.Entry.configure(end_date, state='readonly')
+
+    ttk.Label(filter_frame, text="Type:").pack(side='left')
+    type_var = tk.StringVar(value="all")
+    type_options = ["all", "sent", "received"]
+    type_menu = ttk.Combobox(filter_frame, textvariable=type_var, values=type_options, state="readonly")
+    type_menu.pack(side='left', padx=5)
 
     ttk.Label(filter_frame, text="Topic:").pack(side='left', padx=(10,0))
     search_var = tk.StringVar()
     search_entry = ttk.Entry(filter_frame, textvariable=search_var, width=20)
     search_entry.pack(side='left', padx=5)
 
-    search_button = ttk.Button(filter_frame, text="Filter", command=lambda: on_search_button_click(messages, table, start_date, end_date, search_var))
+    search_button = ttk.Button(filter_frame, text="Filter", command=lambda: on_search_button_click(messages, table, start_date, end_date, search_var, type_var))
     search_button.pack(side='left', padx=5)
 
     # Split main window into two sections
@@ -213,7 +227,7 @@ if __name__ == "__main__":
     table_frame = ttk.Frame(paned)
     paned.add(table_frame, weight=1)
 
-    columns = ("Date", "Topic", "Snippet")
+    columns = ("Date", "Type", "Topic", "Message")
     table = ttk.Treeview(table_frame, columns=columns, show='headings')
     for col in columns:
         table.heading(col, text=col)
@@ -244,8 +258,15 @@ if __name__ == "__main__":
     viewer_frame.rowconfigure(0, weight=1)
     viewer_frame.columnconfigure(0, weight=1)
 
+    # Initial message in viewer
+    message_view.insert(
+        tk.END,
+        "Double-click a message in the table to view its full content here."
+    )
+    message_view.configure(state='disabled')
+
     # Bind row click
-    table.bind("<Double-1>", lambda event: on_row_click(event, messages, table, start_date, end_date, search_var, message_view))
+    table.bind("<Double-1>", lambda event: on_row_click(event, messages, table, start_date, end_date, search_var, type_var, message_view))
 
     # Populate initial table
     update_table(messages, table)
