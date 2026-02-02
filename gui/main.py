@@ -72,6 +72,8 @@ def load_messages() -> list[Message]:
     """
     messages = []
     documents_dir = Path.home() / "Documents" / "MessageVault"
+    if not documents_dir.exists():
+        return messages
 
     for prisoner_dir in documents_dir.iterdir():
         if not prisoner_dir.is_dir():
