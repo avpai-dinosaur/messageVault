@@ -56,7 +56,7 @@ If the user selects Google Drive as the save destination, MessageVault uses Goog
 - List folders for user selection
 - Create folders/files in the selected Drive location
 
-MessageVault requests the Drive scope `https://www.googleapis.com/auth/drive.file`.
+MessageVault requests the Drive scope `https://www.googleapis.com/auth/drive`.
 
 This scope allows the extension to list and select existing folders in the user’s Google Drive and create files/folders at the user-selected destination.
 
