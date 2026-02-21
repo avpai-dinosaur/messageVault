@@ -1,0 +1,54 @@
+name: Build MessageVault Installer
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+
+    steps:
+      # 1. Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3. Install PyInstaller
+      - name: Install PyInstaller
+        run: pip install -r gui/requirements.txt pyinstaller
+
+      # 4a. Build native-host EXE in nativeHost
+      - name: Build Native Host Executable
+        working-directory: nativeHost
+        run: |
+          pyinstaller --onefile main.py --name MVNativeHost --distpath .
+
+      # 4b. Build GUI EXE in nativeHost so that both EXEs are in the same folder
+      - name: Build GUI Executable
+        working-directory: gui
+        run: |
+          pyinstaller --onefile main.py --name MessageVault --distpath ../nativeHost
+
+      # 5. Install Inno Setup (ISCC)
+      - name: Install Inno Setup
+        run: choco install innosetup --yes
+
+      # 6. Compile the installer using MessageVaultSetup.iss
+      - name: Build Inno Setup Installer
+        working-directory: nativeHost
+        run: |
+          iscc.exe MessageVaultSetup.iss
+
+      # 7. Upload installer artifact
+      - name: Upload Installer Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MessageVaultInstaller
+          path: nativeHost\Output\MessageVaultInstaller.exe

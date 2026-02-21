@@ -1,0 +1,9 @@
+{
+    "name": "com.ashvinpai.messagevault",
+    "description": "Host for MessageVault Windows native messaging",
+    "path": "C:\\Program Files\\MessageVault\\MVNativeHost.exe",
+    "type": "stdio",
+    "allowed_origins": [
+        "chrome-extension://pedlbanonnfoppimddhnojaclgecnbmp/"
+    ]
+}

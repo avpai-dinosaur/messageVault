@@ -1,0 +1,13 @@
+__pycache__
+env
+.vscode
+
+nativeHost/build
+nativeHost/*.spec
+
+*.zip
+
+.ipynb_checkpoints
+*.ipynb
+
+topics/

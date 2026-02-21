@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwP5d+2YB4b3m5bguJ+WLUSJfV7UcKWqJJKDc85P42ZgPUuFYpcB8aVfVyv6P12+dZz7M1a9X7LsThS1ViVcJx+39ZUhn4xItsNO1zmD/Jcmgg3tikoYIS5u+LImsC+cGM/35krmHy/Qp87QUdIrBicu+WNHrhDfjlEuYkBvo5o6prL9dOj1ZicEqpWMiOaNRWT0ajs5jDdEkdg9/GcryHI7ifmRkEDcjAZ1LNgX/kXRsLzD+yEZUs/GNmSItLAtYdYdfA7NAzSMwErc/a6UuQuDccQBHm/yQ76ZCTRidEfkw/I0Caz6j1i2ldkFzeQiQOfY/JzY1GhfcB5s97gKdSwIDAQAB",
+  "name": "MessageVault - JPay Message Backup Tool",
+  "version": "0.2",
+  "description": "Automatically extracts and stores JPay messages on your local machine. Preserve communication history with incarcerated loved ones.",
+  "permissions": ["tabs", "nativeMessaging", "storage", "identity"],
+  "host_permissions": ["https://www.googleapis.com/*"],
+  "oauth2": {
+    "client_id": "920908808510-o4d294948p6fp5lndacufu7ud553qqlf.apps.googleusercontent.com",
+    "scopes": [
+       "https://www.googleapis.com/auth/drive"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.jpay.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
