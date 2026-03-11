@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice for the Inside</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <!-- EasyMDE for rich markdown editing -->
+  <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+  <link rel="stylesheet" href="styles/base.css" />
+  <link rel="stylesheet" href="styles/animations.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/chat.css" />
+  <link rel="stylesheet" href="styles/plan.css" />
+  <link rel="stylesheet" href="styles/voice.css" />
+  <link rel="stylesheet" href="styles/responsive.css" />
+  <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+  <!-- Marked for markdown rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/lib/marked.umd.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <header>
+    <div class="header-left">
+      <div class="app-title">Voice <span>for the Inside</span></div>
+      <div class="profile-chip" id="profile-chip" style="display:none;">
+        <div class="profile-avatar" id="profile-avatar"></div>
+        <span id="profile-name-label"></span>
+      </div>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="btn-doc-mode" onclick="switchMode('document')">📋 Plan</button>
+      <button class="mode-btn" id="btn-voice-mode" onclick="switchMode('voice')">🎙️ Talk</button>
+    </div>
+  </header>
+
+  <!-- Document Mode -->
+  <div id="document-mode">
+
+    <!-- Chat Panel -->
+    <div class="chat-panel">
+      <div class="chat-messages" id="chat-messages">
+        <!-- Welcome message injected by JS -->
+      </div>
+      <div class="chat-input-area">
+        <textarea
+          class="chat-input"
+          id="chat-input"
+          placeholder="Ask about the reentry plan, resources, next steps…"
+          rows="1"
+          onkeydown="handleChatKeydown(event)"
+          oninput="autoResize(this)"
+        ></textarea>
+        <button class="send-btn" onclick="sendMessage()" title="Send">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Plan Panel -->
+    <div class="plan-panel">
+      <div class="plan-header">
+        <div>
+          <div class="plan-title">Reentry Plan</div>
+          <div class="plan-subtitle" id="plan-subtitle">Loading…</div>
+        </div>
+        <div class="plan-actions">
+          <button class="plan-action-btn" onclick="refreshPlan()" title="Reload plan from server">↺ Refresh</button>
+          <button class="plan-action-btn primary" onclick="savePlan()" title="Save edits">Save</button>
+        </div>
+      </div>
+      <div class="plan-editor-wrap" id="plan-editor-wrap">
+        <div class="plan-empty" id="plan-empty">
+          <div class="plan-empty-icon">📄</div>
+          <p>No reentry plan yet. Use the chat to generate one.</p>
+        </div>
+        <textarea id="plan-editor" style="display:none;"></textarea>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Voice Mode -->
+  <div id="voice-mode">
+
+    <div class="voice-identity">
+      <div class="voice-avatar" id="voice-avatar">
+        <div class="voice-avatar-ring"></div>
+        <div class="voice-avatar-ring-2"></div>
+        <span id="voice-avatar-initials"></span>
+      </div>
+      <div class="voice-name" id="voice-full-name">Loading…</div>
+      <div class="voice-tagline">Speak naturally · Interruptions welcome</div>
+    </div>
+
+    <!-- Waveform visualizer -->
+    <div class="waveform-wrap" id="waveform"></div>
+
+    <!-- Mic control -->
+    <div class="mic-area">
+      <button class="mic-btn idle" id="mic-btn" onclick="toggleMic()">
+        <!-- Mic icon (idle / listening) -->
+        <svg id="mic-icon-mic" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="2" width="6" height="12" rx="3"/>
+          <path d="M5 10a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+        </svg>
+        <!-- Stop icon (agent speaking) — hidden by default -->
+        <svg id="mic-icon-stop" viewBox="0 0 24 24" fill="white" style="display:none;">
+          <rect x="6" y="6" width="12" height="12" rx="2"/>
+        </svg>
+      </button>
+      <div class="mic-status" id="mic-status">Tap to start conversation</div>
+    </div>
+
+    <!-- Live transcript -->
+    <div class="voice-transcript" id="voice-transcript"></div>
+
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="scripts/config.js"></script>
+<script src="scripts/state.js"></script>
+<script src="scripts/utils.js"></script>
+<script src="scripts/profile-session.js"></script>
+<script src="scripts/mode.js"></script>
+<script src="scripts/plan.js"></script>
+<script src="scripts/chat.js"></script>
+<script src="scripts/voice.js"></script>
+<script src="scripts/init.js"></script>
+</body>
+</html>

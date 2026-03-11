@@ -1,0 +1,186 @@
+/* Voice mode screen */
+#voice-mode {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+
+#voice-mode.active { display: flex; }
+
+#voice-mode::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.voice-identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 48px;
+  position: relative;
+  z-index: 1;
+}
+
+.voice-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--terracotta), #8B3A1E);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 2rem;
+  color: white;
+  font-weight: 600;
+  position: relative;
+}
+
+.voice-avatar-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid rgba(196, 97, 58, 0.3);
+  animation: ringPulse 2.5s ease infinite;
+}
+
+.voice-avatar-ring-2 {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1px solid rgba(196, 97, 58, 0.15);
+  animation: ringPulse 2.5s ease infinite 0.5s;
+}
+
+.voice-name {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: -0.01em;
+}
+
+.voice-tagline {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.waveform-wrap {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 40px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.wave-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: rgba(196, 97, 58, 0.5);
+  transition: height 0.08s ease;
+}
+
+.wave-bar.active { background: var(--terracotta); }
+
+.mic-area {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.mic-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mic-btn.idle {
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.15);
+}
+
+.mic-btn.idle:hover {
+  background: rgba(255,255,255,0.14);
+  border-color: rgba(255,255,255,0.3);
+  transform: scale(1.04);
+}
+
+.mic-btn.listening {
+  background: var(--terracotta);
+  border: 2px solid var(--terracotta);
+  box-shadow: 0 0 0 10px rgba(196, 97, 58, 0.2), 0 0 0 22px rgba(196, 97, 58, 0.08);
+  animation: micPulse 1.5s ease infinite;
+}
+
+.mic-btn.agent-speaking {
+  background: rgba(255,255,255,0.06);
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.mic-btn svg { width: 26px; height: 26px; }
+
+.mic-status {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.02em;
+  min-height: 1.2em;
+  text-align: center;
+}
+
+.voice-transcript {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 20px 40px;
+  background: linear-gradient(to top, rgba(28,26,23,0.95) 70%, transparent);
+  z-index: 1;
+}
+
+.voice-transcript::-webkit-scrollbar { width: 3px; }
+.voice-transcript::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.transcript-line {
+  font-size: 0.85rem;
+  line-height: 1.55;
+  margin-bottom: 6px;
+  animation: fadeUp 0.2s ease;
+}
+
+.transcript-line.user { color: rgba(255,255,255,0.7); text-align: right; }
+.transcript-line.agent { color: var(--terracotta-light); }
+
+.transcript-line .speaker {
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 1px;
+}
