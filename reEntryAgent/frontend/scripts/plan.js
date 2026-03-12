@@ -15,11 +15,11 @@ function initMDE() {
       'side-by-side',
       'fullscreen',
     ],
-    placeholder: 'Reentry plan will appear here once generated...',
+    placeholder: 'No reentry plan yet. Reentry plan will appear here once generated...',
     status: false,
     minHeight: '100px',
   });
-  document.getElementById('plan-editor').style.display = '';
+  document.getElementById('plan-editor').style.display = 'none';
 }
 
 async function loadPlan() {
@@ -40,7 +40,6 @@ async function loadPlan() {
 
 function setPlanContent(markdown) {
   if (!mde) return;
-  document.getElementById('plan-empty').style.display = 'none';
   document.querySelector('.EasyMDEContainer').style.display = '';
   mde.value(markdown);
   planLoaded = true;

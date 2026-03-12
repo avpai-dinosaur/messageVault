@@ -106,33 +106,3 @@
 .CodeMirror-fullscreen {
   z-index: 100;
 }
-
-.plan-empty {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--ink-faint);
-  padding: 40px;
-  text-align: center;
-}
-
-.plan-empty-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--cream);
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-}
-
-.plan-empty p {
-  font-size: 0.88rem;
-  max-width: 260px;
-  line-height: 1.5;
-}
