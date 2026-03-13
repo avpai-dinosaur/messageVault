@@ -15,16 +15,44 @@ function appendUserMessage(text) {
   wrap.scrollTop = wrap.scrollHeight;
 }
 
-function appendAgentMessage(text) {
-  const wrap = document.getElementById('chat-messages');
-  const name = profile?.name?.split(' ')[0] || 'Agent';
-  const msg = document.createElement('div');
-  msg.className = 'msg agent';
-  msg.innerHTML = `<div class="msg-label">${escHtml(name)}'s Advocate</div><div class="msg-bubble"></div>`;
-  msg.querySelector('.msg-bubble').innerHTML = marked.parse(text);
-  wrap.appendChild(msg);
-  wrap.scrollTop = wrap.scrollHeight;
-  return msg;
+function appendAgentMessage(text, isToolMessage = false, toolHeader = null) {
+    const wrap = document.getElementById('chat-messages');
+    const name = profile?.name?.split(' ')[0] || 'Agent';
+    const msg = document.createElement('div');
+    msg.className = 'msg agent';
+    const defaultLabel = `${escHtml(name)}'s Advocate`;
+    const resolvedToolHeader = toolHeader == null ? "Unknown Tool" : escHtml(toolHeader);
+
+    if (isToolMessage) {
+        msg.innerHTML = 
+            `<div class="msg-label">
+                <button type="button" class="tool-toggle"></button>
+                ${resolvedToolHeader}
+            </div>
+            <div class="msg-bubble"></div>`;
+    } else {
+        msg.innerHTML = 
+            `<div class="msg-label">${defaultLabel}</div>
+            <div class="msg-bubble"></div>`;
+    }
+
+    msg.querySelector('.msg-bubble').innerHTML = marked.parse(text);
+
+    if (isToolMessage) {
+        const toggle = msg.querySelector('.tool-toggle');
+        const bubble = msg.querySelector('.msg-bubble');
+        let isExpanded = false;
+        toggle.addEventListener('click', () => {
+            isExpanded = !isExpanded;
+            toggle.textContent = isExpanded ? '▾' : '▸';
+            bubble.style.display = isExpanded ? '' : 'none';
+        });
+        toggle.textContent = '▸';
+        bubble.style.display = 'none';
+    }
+
+    wrap.appendChild(msg);
+    wrap.scrollTop = wrap.scrollHeight;
 }
 
 function showTyping() {
@@ -42,6 +70,46 @@ function hideTyping() {
   if (el) el.remove();
 }
 
+function extractEventSummary(event) {
+    const lines = [];
+    const parts = event?.content?.parts;
+    let isToolMessage = false;
+    let toolHeader = null;
+    if (Array.isArray(parts)) {
+        for (const part of parts) {
+            if (part?.functionCall) {
+                isToolMessage = true;
+                const functionName = part.functionCall.name || 'unknown_function';
+                toolHeader = `Calling ${functionName}`;
+                lines.push(`### ${toolHeader}`);
+                for (const [arg_name, arg_val] of Object.entries(part.functionCall.args || {})) {
+                    lines.push(`- **${arg_name}**: ${JSON.stringify(arg_val)}`);
+                }
+            }
+            else if (part?.functionResponse) {
+                isToolMessage = true;
+                const functionName = part.functionResponse.name || 'unknown_function';
+                toolHeader = `${functionName} Response`;
+                lines.push(`### ${toolHeader}`);
+                for (const [resp_name, resp_val] of Object.entries(part.functionResponse.response || {})) {
+                    lines.push(`- **${resp_name}**: ${JSON.stringify(resp_val)}`);
+                }
+            }
+            else if (part?.text) {
+                lines.push(part.text.trim());
+            }
+        }
+    }
+    return [lines.join('\n'), isToolMessage, toolHeader];
+}
+
+function isArtifactUpdateEvent(event) {
+  const artifactDelta = event?.actions?.artifactDelta;
+  return artifactDelta != null
+    && typeof artifactDelta === 'object'
+    && Object.prototype.hasOwnProperty.call(artifactDelta, ARTIFACT_NAME);
+}
+
 async function sendMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
@@ -53,7 +121,7 @@ async function sendMessage() {
   showTyping();
 
   try {
-    const res = await fetch(`${API_BASE}/run_sse`, {
+    const res = await fetch(`${API_BASE}/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -69,60 +137,24 @@ async function sendMessage() {
 
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let agentText = '';
-    let planWasUpdated = false;
-
     hideTyping();
-    const agentMsgEl = appendAgentMessage('...');
-    const bubble = agentMsgEl.querySelector('.msg-bubble');
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const parts = buffer.split('\n\n');
-      buffer = parts.pop();
-
-      for (const part of parts) {
-        const dataLine = part.split('\n').find((l) => l.startsWith('data:'));
-        if (!dataLine) continue;
-        const json = dataLine.slice(5).trim();
-        if (!json || json === '[DONE]') continue;
-
-        let event;
-        try {
-          event = JSON.parse(json);
-        } catch {
-          continue;
-        }
-
-        if (event.content?.parts) {
-          for (const p of event.content.parts) {
-            if (p.text) agentText += p.text;
-          }
-          bubble.innerHTML = marked.parse(agentText || '...');
-          agentMsgEl.scrollIntoView({ block: 'end' });
-        }
-
-        if (event.actions?.artifactDelta || event.actions?.artifact_delta) {
-          planWasUpdated = true;
-        }
-      }
+    const payload = await res.json();
+    console.debug('run payload:', payload);
+    let isPlanUpdated = false;
+    for (const event of payload){
+        const [summary, isToolMessage, toolHeader] = extractEventSummary(event);
+        appendAgentMessage(summary, isToolMessage, toolHeader);
+        isPlanUpdated = isPlanUpdated || isArtifactUpdateEvent(event);
     }
 
-    bubble.innerHTML = marked.parse(agentText || '(no response)');
-
-    if (planWasUpdated) {
+    if (isPlanUpdated) {
       await loadPlan();
       showToast('Plan updated ✓');
     }
   } catch (e) {
     hideTyping();
-    console.error('SSE error:', e);
+    console.error('Run request error:', e);
     appendAgentMessage('Sorry, something went wrong. Please try again.');
   }
 }

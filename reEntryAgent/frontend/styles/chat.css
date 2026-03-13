@@ -127,6 +127,15 @@
   transition: background 0.15s, transform 0.1s;
 }
 
+.tool-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
 .send-btn:hover { background: var(--terracotta-light); }
 .send-btn:active { transform: scale(0.93); }
 .send-btn svg { fill: white; width: 16px; height: 16px; }
