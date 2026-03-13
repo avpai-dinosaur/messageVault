@@ -1,18 +1,18 @@
-function appendWelcomeMessage() {
-  const name = profile?.name?.split(' ')[0] || 'your loved one';
-  appendAgentMessage(
-    `Hello. I'm here to help you support ${name} through their reentry process. ` +
-    'You can ask me about their plan, search for resources, or ask me to update any section.'
-  );
-}
+const TOOL_HEADERS = {
+    "rag_agent": ["Searching prisoner correspondence...", "Finished searching correspondence"],
+    "plan_extractor_agent": ["Creating reentry plan...", "Finished creating reentry plan"],
+    "generate_reentry_plan": ["Generating reentry plan document...", "Finished generating document"],
+    "search_agent": ["Searching internet...", "Finished searching internet"],
+    "plan_updater_agent": ["Updating reentry plan...", "Finished updating reentry plan"]
+};
 
 function appendUserMessage(text) {
-  const wrap = document.getElementById('chat-messages');
-  const msg = document.createElement('div');
-  msg.className = 'msg user';
-  msg.innerHTML = `<div class="msg-label">You</div><div class="msg-bubble"><p>${escHtml(text)}</p></div>`;
-  wrap.appendChild(msg);
-  wrap.scrollTop = wrap.scrollHeight;
+    const wrap = document.getElementById('chat-messages');
+    const msg = document.createElement('div');
+    msg.className = 'msg user';
+    msg.innerHTML = `<div class="msg-label">You</div><div class="msg-bubble"><p>${escHtml(text)}</p></div>`;
+    wrap.appendChild(msg);
+    wrap.scrollTop = wrap.scrollHeight;
 }
 
 function appendAgentMessage(text, isToolMessage = false, toolHeader = null) {
@@ -24,14 +24,14 @@ function appendAgentMessage(text, isToolMessage = false, toolHeader = null) {
     const resolvedToolHeader = toolHeader == null ? "Unknown Tool" : escHtml(toolHeader);
 
     if (isToolMessage) {
-        msg.innerHTML = 
+        msg.innerHTML =
             `<div class="msg-label">
                 <button type="button" class="tool-toggle"></button>
                 ${resolvedToolHeader}
             </div>
             <div class="msg-bubble"></div>`;
     } else {
-        msg.innerHTML = 
+        msg.innerHTML =
             `<div class="msg-label">${defaultLabel}</div>
             <div class="msg-bubble"></div>`;
     }
@@ -56,18 +56,18 @@ function appendAgentMessage(text, isToolMessage = false, toolHeader = null) {
 }
 
 function showTyping() {
-  const wrap = document.getElementById('chat-messages');
-  const el = document.createElement('div');
-  el.className = 'msg agent';
-  el.id = 'typing-indicator';
-  el.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
-  wrap.appendChild(el);
-  wrap.scrollTop = wrap.scrollHeight;
+    const wrap = document.getElementById('chat-messages');
+    const el = document.createElement('div');
+    el.className = 'msg agent';
+    el.id = 'typing-indicator';
+    el.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+    wrap.appendChild(el);
+    wrap.scrollTop = wrap.scrollHeight;
 }
 
 function hideTyping() {
-  const el = document.getElementById('typing-indicator');
-  if (el) el.remove();
+    const el = document.getElementById('typing-indicator');
+    if (el) el.remove();
 }
 
 function extractEventSummary(event) {
@@ -80,8 +80,8 @@ function extractEventSummary(event) {
             if (part?.functionCall) {
                 isToolMessage = true;
                 const functionName = part.functionCall.name || 'unknown_function';
-                toolHeader = `Calling ${functionName}`;
-                lines.push(`### ${toolHeader}`);
+                toolHeader = TOOL_HEADERS[functionName] ? TOOL_HEADERS[functionName][0] : `Calling ${functionName}...`;
+                lines.push(`**functionCall**: ${functionName}`);
                 for (const [arg_name, arg_val] of Object.entries(part.functionCall.args || {})) {
                     lines.push(`- **${arg_name}**: ${JSON.stringify(arg_val)}`);
                 }
@@ -89,8 +89,8 @@ function extractEventSummary(event) {
             else if (part?.functionResponse) {
                 isToolMessage = true;
                 const functionName = part.functionResponse.name || 'unknown_function';
-                toolHeader = `${functionName} Response`;
-                lines.push(`### ${toolHeader}`);
+                toolHeader = TOOL_HEADERS[functionName] ? TOOL_HEADERS[functionName][1] : `${functionName} Response`;
+                lines.push(`**functionResponse**: ${functionName}`);
                 for (const [resp_name, resp_val] of Object.entries(part.functionResponse.response || {})) {
                     lines.push(`- **${resp_name}**: ${JSON.stringify(resp_val)}`);
                 }
@@ -104,69 +104,85 @@ function extractEventSummary(event) {
 }
 
 function isArtifactUpdateEvent(event) {
-  const artifactDelta = event?.actions?.artifactDelta;
-  return artifactDelta != null
-    && typeof artifactDelta === 'object'
-    && Object.prototype.hasOwnProperty.call(artifactDelta, ARTIFACT_NAME);
+    const artifactDelta = event?.actions?.artifactDelta;
+    return artifactDelta != null
+        && typeof artifactDelta === 'object'
+        && Object.prototype.hasOwnProperty.call(artifactDelta, ARTIFACT_NAME);
 }
 
 async function sendMessage() {
-  const input = document.getElementById('chat-input');
-  const text = input.value.trim();
-  if (!text || !sessionId) return;
-  input.value = '';
-  autoResize(input);
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !sessionId) return;
+    input.value = '';
+    autoResize(input);
 
-  appendUserMessage(text);
-  showTyping();
+    appendUserMessage(text);
+    showTyping();
 
-  try {
-    const res = await fetch(`${API_BASE}/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        appName: APP_NAME,
-        userId: USER_ID,
-        sessionId,
-        newMessage: {
-          role: 'user',
-          parts: [{ text }],
-        },
-      }),
-    });
+    try {
+        const res = await fetch(`${API_BASE}/run_sse`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                appName: APP_NAME,
+                userId: USER_ID,
+                sessionId,
+                newMessage: {
+                    role: 'user',
+                    parts: [{ text }],
+                },
+            }),
+        });
 
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-    hideTyping();
+        const decoder = new TextDecoder();
+        for await (const chunk of res.body) {
+            const parts = decoder.decode(chunk, { stream: true }).split('\n\n');
+            parts.pop(); // Remove the last empty element after the final split
+            console.debug('Received chunk:', parts);
+            for (const data of parts) {
+                let event;
+                try {
+                    const PREFIX = 'data: ';
+                    event = JSON.parse(data.slice(PREFIX.length).trim());
+                    console.debug('Parsed event:', event);
+                } catch (e) {
+                    console.error('Failed to parse event JSON:', e, 'Raw data:', data);
+                    continue; // Skip this chunk and continue with the next one
+                }
 
-    const payload = await res.json();
-    console.debug('run payload:', payload);
-    let isPlanUpdated = false;
-    for (const event of payload){
-        const [summary, isToolMessage, toolHeader] = extractEventSummary(event);
-        appendAgentMessage(summary, isToolMessage, toolHeader);
-        isPlanUpdated = isPlanUpdated || isArtifactUpdateEvent(event);
+                const [summary, isToolMessage, toolHeader] = extractEventSummary(event);
+                hideTyping();
+                if (summary != '') {
+                    appendAgentMessage(summary, isToolMessage, toolHeader);
+                }
+                showTyping();
+                if (isArtifactUpdateEvent(event)) {
+                    await loadPlan();
+                    showToast('Plan updated ✓');
+                }
+            }
+        }
+
+        hideTyping();
+
+    } catch (e) {
+        hideTyping();
+        console.error('Run request error:', e);
+        appendAgentMessage('Sorry, something went wrong. Please try again.');
     }
-
-    if (isPlanUpdated) {
-      await loadPlan();
-      showToast('Plan updated ✓');
-    }
-  } catch (e) {
-    hideTyping();
-    console.error('Run request error:', e);
-    appendAgentMessage('Sorry, something went wrong. Please try again.');
-  }
 }
 
 function handleChatKeydown(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
 }
 
 function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
 }

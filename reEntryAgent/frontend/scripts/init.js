@@ -3,7 +3,6 @@ async function init() {
   await ensureSession();
   initMDE();
   await loadPlan();
-  appendWelcomeMessage();
   buildWaveform();
 }
 
