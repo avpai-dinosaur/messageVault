@@ -4,5 +4,4 @@ function switchMode(mode) {
   document.getElementById('voice-mode').style.display = mode === 'voice' ? 'flex' : 'none';
   document.getElementById('btn-doc-mode').classList.toggle('active', mode === 'document');
   document.getElementById('btn-voice-mode').classList.toggle('active', mode === 'voice');
-  if (mode !== 'voice' && isListening) stopMic();
 }

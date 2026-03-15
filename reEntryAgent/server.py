@@ -53,12 +53,16 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str) -> None:
     await websocket.accept()
 
     response_modalities = ["AUDIO"]
+    voice_config = types.VoiceConfig(
+        prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name='Charon')
+    )
     run_config = RunConfig(
         streaming_mode=StreamingMode.BIDI,
         response_modalities=response_modalities,
         input_audio_transcription=types.AudioTranscriptionConfig(),
         output_audio_transcription=types.AudioTranscriptionConfig(),
-        session_resumption=types.SessionResumptionConfig()
+        session_resumption=types.SessionResumptionConfig(),
+        speech_config=types.SpeechConfig(voice_config=voice_config)
     )
 
     session = await voice_runner.session_service.create_session(

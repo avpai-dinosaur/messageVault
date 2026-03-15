@@ -111,13 +111,15 @@ function handleAdkEvent(event) {
                 const data = part.inlineData.data;
 
                 if (mimeType && mimeType.startsWith("audio/pcm") && audioPlayerNode) {
+                    setMicState('agent-speaking');
                     audioPlayerNode.port.postMessage(base64ToArray(data));
                 }
             }
         }
     }
 
-    if (adkEvent.interrupted) {
+    if (adkEvent.interrupted === true) {
+        console.debug('Audio interrupted by user');
         if (audioPlayerNode) {
             audioPlayerNode.port.postMessage({ command: 'endOfAudio' });
         }
@@ -125,15 +127,15 @@ function handleAdkEvent(event) {
         return;
     }
 
-    if (adkEvent.turnComplete) {
+    if (adkEvent.turnComplete === true) {
         setMicState('listening');
     }
 
-    if (adkEvent.outputTranscription?.text && adkEvent.outputTranscription.finished) {
+    if (adkEvent.outputTranscription?.text && adkEvent.outputTranscription.finished === true) {
         appendVoiceTranscript('agent', adkEvent.outputTranscription.text);
     }
 
-    if (adkEvent.inputTranscription?.text && adkEvent.inputTranscription.finished) {
+    if (adkEvent.inputTranscription?.text && adkEvent.inputTranscription.finished === true) {
         appendVoiceTranscript('user', adkEvent.inputTranscription.text);
     }
 }
