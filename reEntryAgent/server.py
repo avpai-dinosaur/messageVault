@@ -69,12 +69,16 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str) -> None:
     live_request_queue = LiveRequestQueue()
 
     async def upstream_task() -> None:
-        """Receive messages from WebSocket and send to LiveRequestQueue."""
+        """Receive raw PCM audio from WebSocket and forward to the live model."""
         try:
             while True:
-                data: str = await websocket.receive_text()
-                content = types.Content(parts=[types.Part(text=data)])
-                live_request_queue.send_content(content)
+                message = await websocket.receive()
+                if "bytes" in message:
+                    audio_data = message["bytes"]
+                    audio_blob = types.Blob(
+                        mime_type="audio/pcm;rate=16000", data=audio_data
+                    )
+                    live_request_queue.send_realtime(audio_blob)
         except WebSocketDisconnect:
             live_request_queue.close()
 
@@ -86,9 +90,8 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str) -> None:
             live_request_queue=live_request_queue,
             run_config=run_config
         ):
-            await websocket.send_text(
-                event.model_dump_json(exclude_none=True, by_alias=True)
-            )
+            event_json = event.model_dump_json(exclude_none=True, by_alias=True)
+            await websocket.send_text(event_json)
 
     try:
         await asyncio.gather(
