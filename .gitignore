@@ -12,7 +12,6 @@ nativeHost/*.spec
 
 topics/
 notebooks/
-data/
 
 # Environment variables and secrets
 .env
