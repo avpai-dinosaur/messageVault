@@ -1,0 +1,11 @@
+/* Responsive rules */
+@media (max-width: 768px) {
+  .chat-panel {
+    width: 100%;
+    border-right: none;
+  }
+
+  .plan-panel {
+    display: none;
+  }
+}
