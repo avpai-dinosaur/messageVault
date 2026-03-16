@@ -138,11 +138,15 @@ async function sendMessage() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const decoder = new TextDecoder();
+        let buffer = '';
         for await (const chunk of res.body) {
-            const parts = decoder.decode(chunk, { stream: true }).split('\n\n');
-            parts.pop(); // Remove the last empty element after the final split
+            buffer += decoder.decode(chunk, { stream: true });
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop(); // Keep the last incomplete part in the buffer
             console.debug('Received chunk:', parts);
             for (const data of parts) {
+                if (!data.trim()) continue; // Skip empty chunks
+                if (!data.startsWith('data: ')) continue; // Skip non-data chunks (e.g., comments or control messages or incomplete chunks)
                 let event;
                 try {
                     const PREFIX = 'data: ';
