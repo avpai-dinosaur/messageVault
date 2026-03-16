@@ -8,10 +8,8 @@ nativeHost/*.spec
 *.zip
 
 .ipynb_checkpoints
-*.ipynb
 
 topics/
-notebooks/
 
 # Environment variables and secrets
 .env
